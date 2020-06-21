@@ -1,0 +1,486 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<head>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.3">
+<script type="text/javascript" src="./assets/extras/jquery.min.1.7.js"></script>
+<script type="text/javascript" src="./assets/extras/jquery-ui-1.8.20.custom.min.js"></script>
+<script type="text/javascript" src="./assets/extras/jquery.mousewheel.min.js"></script>
+<script type="text/javascript" src="./assets/extras/modernizr.2.5.3.min.js"></script>
+<script type="text/javascript" src="./assets/lib/hash.js"></script>
+<!-- <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300&display=swap" rel="stylesheet">  -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&display=swap" rel="stylesheet">  -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">  -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">  -->
+<!-- <link  href="http://fonts.googleapis.com/css?family=Reenie+Beanie:regular" rel="stylesheet" type="text/css"> -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">  -->
+</head>
+
+
+<body>
+<div id="canvas">
+	<div id="book-zoom">
+		<div class="sj-book">
+			<div depth="5" class="hard"> <div class="side"></div> </div>
+			<div depth="5" class="hard front-side"> <div class="depth"></div> </div>
+			<div class="own-size"></div>
+			<div class="own-size even">
+				
+					
+			</div>
+			<div class="hard fixed back-side p39"> <div class="depth"></div> </div>
+			<div class="hard p40"></div>
+		</div>
+	</div>
+	
+
+
+</div>
+<div id="commentBox">
+	<a id="closeButton" onclick="closeCommentSection()">&times;</a>
+
+</div>
+
+<script type="text/javascript">
+
+function stickyNote(){
+	alert('Hello');
+	console.log("Hello");
+}
+
+function loadApp() {
+	
+	var flipbook = $('.sj-book');
+
+	// Check if the CSS was already loaded
+	
+	if (flipbook.width()==0 || flipbook.height()==0) {
+		setTimeout(loadApp, 10);
+		return;
+	}
+
+	// Mousewheel
+
+	$('#book-zoom').mousewheel(function(event, delta, deltaX, deltaY) {
+
+		var data = $(this).data(),
+			step = 30,
+			flipbook = $('.sj-book'),
+			actualPos = $('#slider').slider('value')*step;
+
+		if (typeof(data.scrollX)==='undefined') {
+			data.scrollX = actualPos;
+			data.scrollPage = flipbook.turn('page');
+		}
+
+		data.scrollX = Math.min($( "#slider" ).slider('option', 'max')*step,
+			Math.max(0, data.scrollX + deltaX));
+
+		var actualView = Math.round(data.scrollX/step),
+			page = Math.min(flipbook.turn('pages'), Math.max(1, actualView*2 - 2));
+
+		if ($.inArray(data.scrollPage, flipbook.turn('view', page))==-1) {
+			data.scrollPage = page;
+			flipbook.turn('page', page);
+		}
+
+		if (data.scrollTimer)
+			clearInterval(data.scrollTimer);
+		
+		data.scrollTimer = setTimeout(function(){
+			data.scrollX = undefined;
+			data.scrollPage = undefined;
+			data.scrollTimer = undefined;
+		}, 1000);
+
+	});
+
+	// Slider
+
+	$( "#slider" ).slider({
+		min: 1,
+		max: 100,
+
+		start: function(event, ui) {
+
+			if (!window._thumbPreview) {
+				_thumbPreview = $('<div />', {'class': 'thumbnail'}).html('<div></div>');
+				setPreview(ui.value);
+				_thumbPreview.appendTo($(ui.handle));
+			} else
+				setPreview(ui.value);
+
+			moveBar(false);
+
+		},
+
+		slide: function(event, ui) {
+
+			setPreview(ui.value);
+
+		},
+
+		stop: function() {
+
+			if (window._thumbPreview)
+				_thumbPreview.removeClass('show');
+			
+			$('.sj-book').turn('page', Math.max(1, $(this).slider('value')*2 - 2));
+
+		}
+	});
+
+
+	// URIs
+	
+	Hash.on('^page\/([0-9]*)$', {
+		yep: function(path, parts) {
+
+			var page = parts[1];
+
+			if (page!==undefined) {
+				if ($('.sj-book').turn('is'))
+					$('.sj-book').turn('page', page);
+			}
+
+			var oneClick = document.getElementById('sticky-note');
+				var getLi = oneClick.childNodes[2].childNodes[1];
+				getLi.style.pointerEvents="auto";
+
+		},
+		nop: function(path) {
+
+			if ($('.sj-book').turn('is'))
+				$('.sj-book').turn('page', 1);
+		}
+	});
+
+	// Arrows
+
+	$(document).keydown(function(e){
+
+		var previous = 37, next = 39;
+		var commentBox = document.getElementById("commentBox");
+
+		console.log("Inside keydown");
+		if(commentBox.style.display == "block"){
+			previous = null;
+			console.log(commentBox);
+			next=null;
+		}
+		else{
+			console.log(commentBox);
+			switch (e.keyCode) {
+				case previous:
+
+					$('.sj-book').turn('previous');
+
+				break;
+				case next:
+					
+					$('.sj-book').turn('next');
+
+				break;
+			}
+		}
+
+	});
+
+
+	// Flipbook
+
+	flipbook.bind(($.isTouch) ? 'touchend' : 'click', zoomHandle);
+
+	flipbook.turn({
+		elevation: 50,
+		acceleration: !isChrome(),
+		autoCenter: true,
+		gradients: true,
+		duration: 1000,
+		pages: 40,
+		when: {
+			turning: function(e, page, view) {
+				
+				var book = $(this),
+					currentPage = book.turn('page'),
+					pages = book.turn('pages');
+				if (currentPage>3 && currentPage<pages-3) {
+					if (page==1) {
+						book.turn('page', 2).turn('stop').turn('page', page);
+						e.preventDefault();
+						return;
+					} else if (page==pages) {
+						book.turn('page', pages-1).turn('stop').turn('page', page);
+						e.preventDefault();
+						return;
+					}
+				} else if (page>3 && page<pages-3) {
+					if (currentPage==1) {
+						book.turn('page', 2).turn('stop').turn('page', page);
+						e.preventDefault();
+						return;
+					} else if (currentPage==pages) {
+						book.turn('page', pages-1).turn('stop').turn('page', page);
+						e.preventDefault();
+						return;
+					}
+				}
+
+				updateDepth(book, page);
+				
+				if (page>=2)
+					$('.sj-book .p2').addClass('fixed');
+				else
+					$('.sj-book .p2').removeClass('fixed');
+
+				if (page<book.turn('pages'))
+					$('.sj-book .p39').addClass('fixed');
+				else
+					$('.sj-book .p39').removeClass('fixed');
+
+				Hash.go('page/'+page).update();
+					
+			},
+
+			turned: function(e, page, view) {
+
+				var book = $(this);
+
+				if (page==2 || page==3) {
+					book.turn('peel', 'br');
+				}
+
+				updateDepth(book);
+				
+				$('#slider').slider('value', getViewNumber(book, page));
+
+				book.turn('center');
+
+				// For Deleting the reviw if opened on turning the page
+				var commentBox = document.getElementById("commentBox");
+				var closeButton = document.getElementById("closeButton");
+
+				if(commentBox.style.display == "block"){
+					var innerComment = document.getElementById("innerComment");
+					commentBox.removeChild(innerComment);
+					commentBox.style.width="0";
+					closeButton.style.display = "none";	
+					commentBox.style.display = "none";	
+					console.log("Success - Removed Rating");
+					var oneClick = document.getElementById('sticky-note');
+					var getLi = oneClick.childNodes[2].childNodes[1];
+					getLi.style.pointerEvents="auto";
+				}
+			},
+
+			start: function(e, pageObj) {
+				moveBar(true);
+
+			},
+
+			end: function(e, pageObj) {
+			
+				var book = $(this);
+
+				updateDepth(book);
+
+				setTimeout(function() {
+					
+					$('#slider').slider('value', getViewNumber(book));
+
+				}, 1);
+
+				moveBar(false);
+
+			},
+
+			missing: function (e, pages) {
+
+				for (var i = 0; i < pages.length; i++) {
+					addPage(pages[i], $(this));
+				}
+
+			}
+		}
+	});
+
+
+	$('#slider').slider('option', 'max', numberOfViews(flipbook));
+
+	flipbook.addClass('animated');
+
+	// Show canvas
+
+	$('#canvas').css({visibility: ''});
+}
+
+// Hide canvas
+
+$('#canvas').css({visibility: 'hidden'});
+
+// Load turn.js
+
+yepnope({
+	test : Modernizr.csstransforms,
+	yep: ['./assets/lib/turn.min.js'],
+	nope: ['./assets/lib/turn.html4.min.js', './assets/css/jquery.ui.html4.css', './assets/css/steve-jobs-html4.css'],
+	both: ['./assets/js/steve-jobs.js', './assets/css/jquery.ui.css', './assets/css/steve-jobs.css'],
+	complete: loadApp
+});
+	
+</script>
+
+<script>
+
+	function closeCommentSection(){
+		var commentBox = document.getElementById("commentBox");
+		var closeButton = document.getElementById("closeButton");
+
+			if(commentBox.style.display == "block"){
+				var innerComment = document.getElementById("innerComment");
+				commentBox.style.width="0";
+				closeButton.style.display = "none";
+				commentBox.style.display = "none";	
+				commentBox.removeChild(innerComment);
+				var oneClick = document.getElementById('sticky-note');
+				var getLi = oneClick.childNodes[2].childNodes[1];
+				getLi.style.pointerEvents="auto";
+				console.log("Success - Removed Rating");
+			}
+	}
+	
+	var showComment = function(id, articleName){
+		
+		var commentBox = document.getElementById("commentBox");
+		var closeButton = document.getElementById("closeButton");
+		var oneClick = document.getElementById('sticky-note');
+		var getLi = oneClick.childNodes[2].childNodes[1];
+		getLi.style.pointerEvents="none";
+		closeButton.style.display = "block";
+		commentBox.style.display="block";
+		commentBox.style.width = "20%";
+		var div = document.createElement("div"); 
+		div.setAttribute("id","innerComment");
+		
+		var loadReview = "<h4>Please leave your comments for </h4><span class='articleName'>"+articleName+"</span><!-- Start BawkBox Code--><script data-sil-id="+id+">var loadWidget = function() { var d = document, w = window, l = window.location,p = l.protocol == 'file:' ? 'http://' : '//'; if (!w.WS) w.WS = {}; c = w.WS; var m=function(t, o){ var e = d.getElementsByTagName('script'); e=e[e.length-1]; var n = d.createElement(t); if (t=='script') {n.async=true;} for (k in o) n[k] = o[k]; e.parentNode.insertBefore(n, e)}; m('script', { src: p + 'bawkbox.com/widget/star-rating/"+id+"?page=' +encodeURIComponent(l+''), type: 'text/javascript' }); c.load_net = m; }; if(window.Squarespace){ document.addEventListener('DOMContentLoaded', loadWidget); setTimeOut(function(){ document.addEventListener('DOMContentLoaded', loadWidget); }, 3000) } else { loadWidget() } <\/script><script type='application/ld+json' src='/widget/star-rating/"+id+"/microdata'><\/script><div class='sil-widget-star-rating sil-widget' id='sil-widget-"+id+"'><a href='//bawkbox.com/install/star-rating'>Customer Reviews</a></div><!-- End BawkBox Code-->"
+		
+		div.innerHTML = loadReview;
+
+
+		runScripts(div);
+		commentBox.append(div);
+	}
+
+	$('#commentBox').on('click',function(){
+			console.log("Going");
+            $('#commentBox').off('click');
+        });
+	function likeUnlike(idLikeUnlike){
+		var loadLikeUnlike = '<script data-sil-id="'+idLikeUnlike+'">var loadWidget = function() { var d = document, w = window, l = window.location,p = l.protocol == "file:" ? "http://" : "//"; if (!w.WS) w.WS = {}; c = w.WS; var m=function(t, o){ var e = d.getElementsByTagName("script"); e=e[e.length-1]; var n = d.createElement(t); if (t=="script") {n.async=true;} for (k in o) n[k] = o[k]; e.parentNode.insertBefore(n, e)}; m("script", { src: p + "bawkbox.com/widget/like-dislike/'+idLikeUnlike+'?page=" +encodeURIComponent(l+""), type: "text/javascript" }); c.load_net = m; }; if(window.Squarespace){ document.addEventListener("DOMContentLoaded", loadWidget); setTimeOut(function(){ document.addEventListener("DOMContentLoaded", loadWidget); }, 3000) } else { loadWidget() } <\/script><div class="sil-widget-like-dislike sil-widget" id="sil-widget-'+idLikeUnlike+'"style="position: absolute; top: 80%; ><a href="//bawkbox.com/install/like-dislike">Like Dislike Button</a>';
+		
+		console.log("Inside likeUnlike");
+		var unlike = document.getElementById("sticky-note");
+		var div = document.createElement("div");
+		div.innerHTML = loadLikeUnlike;
+		runScripts(div);
+		unlike.append(div);
+	}
+
+	function seq (arr, callback, index) {
+		// first call, without an index
+		if (typeof index === 'undefined') {
+			index = 0
+		}
+
+		arr[index](function () {
+			index++
+			if (index === arr.length) {
+			callback()
+			} else {
+			seq(arr, callback, index)
+			}
+		})
+		}
+
+		// trigger DOMContentLoaded
+	function scriptsDone () {
+		var DOMContentLoadedEvent = document.createEvent('Event')
+		DOMContentLoadedEvent.initEvent('DOMContentLoaded', true, true)
+		document.dispatchEvent(DOMContentLoadedEvent)
+		}
+
+		/* script runner
+		*/
+
+	function insertScript ($script, callback) {
+		var s = document.createElement('script')
+		s.type = 'text/javascript'
+		if ($script.src) {
+			s.onload = callback
+			s.onerror = callback
+			s.src = $script.src
+		} else {
+			s.textContent = $script.innerText
+		}
+
+		// re-insert the script tag so it executes.
+		document.head.appendChild(s)
+
+		// clean-up
+		$script.parentNode.removeChild($script)
+
+		// run the callback immediately for inline scripts
+		if (!$script.src) {
+			callback()
+		}
+		}
+
+		// https://html.spec.whatwg.org/multipage/scripting.html
+		var runScriptTypes = [
+		'application/javascript',
+		'application/ecmascript',
+		'application/x-ecmascript',
+		'application/x-javascript',
+		'text/ecmascript',
+		'text/javascript',
+		'text/javascript1.0',
+		'text/javascript1.1',
+		'text/javascript1.2',
+		'text/javascript1.3',
+		'text/javascript1.4',
+		'text/javascript1.5',
+		'text/jscript',
+		'text/livescript',
+		'text/x-ecmascript',
+		'text/x-javascript'
+		]
+
+	function runScripts ($container) {
+		// get scripts tags from a node
+		var $scripts = $container.querySelectorAll('script')
+		var runList = []
+		var typeAttr
+
+		[].forEach.call($scripts, function ($script) {
+			typeAttr = $script.getAttribute('type')
+
+			// only run script tags without the type attribute
+			// or with a javascript mime attribute value
+			if (!typeAttr || runScriptTypes.indexOf(typeAttr) !== -1) {
+			runList.push(function (callback) {
+				insertScript($script, callback)
+			})
+			}
+		})
+
+		// insert the script tags sequentially
+		// to preserve execution order
+		seq(runList, scriptsDone)
+		}
+</script>
+
+<script src="runtime-es2015.js" type="module"></script><script src="runtime-es5.js" nomodule defer></script><script src="polyfills-es5.js" nomodule defer></script><script src="polyfills-es2015.js" type="module"></script><script src="styles-es2015.js" type="module"></script><script src="styles-es5.js" nomodule defer></script><script src="vendor-es2015.js" type="module"></script><script src="vendor-es5.js" nomodule defer></script><script src="main-es2015.js" type="module"></script><script src="main-es5.js" nomodule defer></script></body>
+</html>
