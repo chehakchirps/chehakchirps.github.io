@@ -5,7 +5,7 @@
 <!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
 <!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
 <head>
-<meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.4">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.3">
 <script type="text/javascript" src="./assets/extras/jquery.min.1.7.js"></script>
 <script type="text/javascript" src="./assets/extras/jquery-ui-1.8.20.custom.min.js"></script>
 <script type="text/javascript" src="./assets/extras/jquery.mousewheel.min.js"></script>
@@ -147,8 +147,8 @@ function loadApp() {
 			}
 
 			var oneClick = document.getElementById('sticky-note');
-				var getLi = oneClick.childNodes[2].childNodes[1];
-				getLi.style.pointerEvents="auto";
+			var getLi = oneClick.childNodes[2].childNodes[1];
+			getLi.style.pointerEvents="auto";
 
 		},
 		nop: function(path) {
@@ -166,13 +166,14 @@ function loadApp() {
 		var commentBox = document.getElementById("commentBox");
 
 		console.log("Inside keydown");
-		if(commentBox.style.display == "block"){
+		if(commentBox.style.width !== "0px"){
+			console.log("Inside keydown11111");
 			previous = null;
 			console.log(commentBox);
 			next=null;
 		}
 		else{
-			console.log(commentBox);
+			// console.log(commentBox);
 			switch (e.keyCode) {
 				case previous:
 
@@ -343,7 +344,7 @@ yepnope({
 				var innerComment = document.getElementById("innerComment");
 				commentBox.style.width="0";
 				closeButton.style.display = "none";
-				commentBox.style.display = "none";	
+				// commentBox.style.display = "none";	
 				commentBox.removeChild(innerComment);
 				var oneClick = document.getElementById('sticky-note');
 				var getLi = oneClick.childNodes[2].childNodes[1];
@@ -374,10 +375,14 @@ yepnope({
 		commentBox.append(div);
 	}
 
-	$('#commentBox').on('click',function(){
-			console.log("Going");
-            $('#commentBox').off('click');
-        });
+	document.addEventListener('mouseup', function(e) {
+		var container = document.getElementById('commentBox');
+		if (!container.contains(e.target)) {
+			closeCommentSection();
+		}
+	});
+
+
 	function likeUnlike(idLikeUnlike){
 		var loadLikeUnlike = '<script data-sil-id="'+idLikeUnlike+'">var loadWidget = function() { var d = document, w = window, l = window.location,p = l.protocol == "file:" ? "http://" : "//"; if (!w.WS) w.WS = {}; c = w.WS; var m=function(t, o){ var e = d.getElementsByTagName("script"); e=e[e.length-1]; var n = d.createElement(t); if (t=="script") {n.async=true;} for (k in o) n[k] = o[k]; e.parentNode.insertBefore(n, e)}; m("script", { src: p + "bawkbox.com/widget/like-dislike/'+idLikeUnlike+'?page=" +encodeURIComponent(l+""), type: "text/javascript" }); c.load_net = m; }; if(window.Squarespace){ document.addEventListener("DOMContentLoaded", loadWidget); setTimeOut(function(){ document.addEventListener("DOMContentLoaded", loadWidget); }, 3000) } else { loadWidget() } <\/script><div class="sil-widget-like-dislike sil-widget" id="sil-widget-'+idLikeUnlike+'"style="position: absolute; top: 80%; ><a href="//bawkbox.com/install/like-dislike">Like Dislike Button</a>';
 		
