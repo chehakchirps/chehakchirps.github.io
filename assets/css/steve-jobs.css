@@ -67,7 +67,8 @@ body, ul, table, form{
 @media (min-width: 360px) and (max-width: 1280px) {  
 
 	body{
-		background: url('../pics/flatlay2-mobile.png') no-repeat center center fixed;
+		/* background: url('../pics/flatlay2-mobile.png') no-repeat center center fixed; */
+		background-color: rgb(202, 202, 219);
 		background-size: cover;
 	}
 
