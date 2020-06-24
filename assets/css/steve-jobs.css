@@ -69,13 +69,18 @@ body, ul, table, form{
 	body{
 		background: url('../pics/flatlay2-mobile.png') no-repeat center center fixed;
 		/* background-color: rgb(202, 202, 219); */
-		background-size: cover;
+		/* background-size: cover; */
+		background-size: auto;
+background-origin: border-box;
+background-attachment: inherit;
+background-position-x: inherit;
+background-position-y: unset;
 	}
 
 	#canvas{
 		position: absolute;
 		top: 30%;
-		margin: 0 auto !important;
+		/* margin: 0 auto !important; */
 	}
 
 	/* .animated{
