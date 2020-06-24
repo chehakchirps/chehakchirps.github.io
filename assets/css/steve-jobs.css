@@ -53,13 +53,13 @@
 body, ul, table, form{
 	margin:0;
 	padding:0;
-	overflow:hidden !important;
 }
 
 @media (min-width: 1281px){
 	body{
 		background: url('../pics/flatlay2.jpg') no-repeat center center fixed;
 		background-size: cover;
+		overflow:hidden !important;
 	}
 }
 
