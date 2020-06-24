@@ -53,13 +53,13 @@
 body, ul, table, form{
 	margin:0;
 	padding:0;
+	overflow:hidden !important;
 }
 
 @media (min-width: 1281px){
 	body{
 		background: url('../pics/flatlay2.jpg') no-repeat center center fixed;
 		background-size: cover;
-		overflow:hidden !important;
 	}
 }
 
@@ -67,7 +67,8 @@ body, ul, table, form{
 @media (min-width: 360px) and (max-width: 1280px) {  
 
 	body{
-		background: url('../pics/flatlay2-mobile.png') no-repeat center center fixed;
+		background: url('../pics/flatlay2.jpg') no-repeat center center fixed;
+		/* background: url('../pics/flatlay2-mobile.png') no-repeat center center fixed; */
 		/* background-color: rgb(202, 202, 219); */
 		/* background-size: cover; */
 		background-size: auto;
